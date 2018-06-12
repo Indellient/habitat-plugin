@@ -3,6 +3,12 @@
 This plugin allows for the abstraction of building, uploading, and promoting
 habitat packages.
 
+## Pre-Reqs
+
+- Must have Jenkins setup for building habitat packages  
+  - A designated origin and the corresponding keys  
+- Habitat Auth Token specified as a Jenkins credential  
+
 ## Usage
 
 The main usage would be as follows to build, upload, and promote the package:
