@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <!--<dependencies>-->
+    <!--<dependency>-->
+    <!--<groupId>org.apache.maven.plugins</groupId>-->
+    <!--<artifactId>maven-enforcer-plugin</artifactId>-->
+    <!--<version>1.4.1</version>-->
+    <!--</dependency>-->
+    <!--</dependencies>-->
+    <properties>
+        <!--<revision>1.0-alpha-1</revision>-->
+        <!--<changelist>-SNAPSHOT</changelist>-->
+        <!--<jclouds.version>2.1.0</jclouds.version>-->
+        <jenkins.version>2.60.3</jenkins.version>
+        <java.level>8</java.level>
+        <!--<workflow-api-plugin.version>2.28-rc343.e9b9e0610374-->
+        <!--</workflow-api-plugin.version> &lt;!&ndash; TODO https://github.com/jenkinsci/workflow-api-plugin/pull/67 &ndash;&gt;-->
+        <!--<useBeta>true</useBeta>-->
+    </properties>
+
+    <parent>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>plugin</artifactId>
+        <version>3.14</version>
+        <relativePath/>
+    </parent>
+
+
+    <artifactId>com.indellient.habitat</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>hpi</packaging>
+
+    <name>Habitat Executor</name>
+    <description>Executes Habitat</description>
+    <url>https://wiki.jenkins-ci.org/display/JENKINS/TODO+Plugin</url>
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://opensource.org/licenses/MIT</url>
+        </license>
+    </licenses>
+    <!-- Assuming you want to host on @jenkinsci:
+    <scm>
+        <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
+        <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
+    </scm>
+    -->
+
+    <repositories>
+        <repository>
+            <id>repo.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/public/</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>repo.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/public/</url>
+        </pluginRepository>
+    </pluginRepositories>
+    <!--<artifactId>maven-enforcer-plugin</artifactId>-->
+    <!--<executions>-->
+    <!--<execution>-->
+    <!--<id>display-info</id>-->
+    <!--<phase>none</phase>-->
+    <!--<goals>-->
+    <!--<goal>display-info</goal>-->
+    <!--<goal>enforce</goal>-->
+    <!--</goals>-->
+    <!--<configuration>-->
+    <!--<rules>-->
+    <!--<requireMavenVersion>-->
+    <!--<version>[3.3.1,)</version>-->
+    <!--<message>3.3.1 required to at least look at .mvn/ if it exists.</message>-->
+    <!--</requireMavenVersion>-->
+    <!--<requireJavaVersion>-->
+    <!--<version>[1.8.0,)</version>-->
+    <!--</requireJavaVersion>-->
+    <!--&lt;!&ndash; TODO failing during incrementals deploy: MENFORCER-281-->
+    <!--<requirePluginVersions>-->
+    <!--<banSnapshots>false</banSnapshots>-->
+    <!--</requirePluginVersions>-->
+    <!--&ndash;&gt;-->
+    <!--<enforceBytecodeVersion>-->
+    <!--<maxJdkVersion>1.${java.level}</maxJdkVersion>-->
+    <!--<ignoredScopes>-->
+    <!--<ignoredScope>test</ignoredScope>-->
+    <!--</ignoredScopes>-->
+    <!--<excludes>-->
+    <!--&lt;!&ndash; Makes no sense to check core itself: &ndash;&gt;-->
+    <!--<exclude>org.jenkins-ci.main:jenkins-core</exclude>-->
+    <!--<exclude>org.jenkins-ci.main:cli</exclude>-->
+    <!--<exclude>org.jenkins-ci.main:jenkins-test-harness</exclude>-->
+    <!--<exclude>org.jenkins-ci.main:remoting</exclude>-->
+    <!--<exclude>org.kohsuke.stapler:stapler</exclude>-->
+    <!--<exclude>org.kohsuke.stapler:stapler-groovy</exclude>-->
+    <!--<exclude>org.kohsuke.stapler:stapler-jelly</exclude>-->
+    <!--<exclude>org.kohsuke.stapler:stapler-jrebel</exclude>-->
+    <!--<exclude>org.jenkins-ci:task-reactor</exclude>-->
+    <!--<exclude>org.codehaus.groovy</exclude>-->
+    <!--&lt;!&ndash;  findbugs dep managed to provided and optional so is not shipped and missing annotations ok &ndash;&gt;-->
+    <!--<exclude>com.google.code.findbugs:annotations</exclude>-->
+    <!--</excludes>-->
+    <!--&lt;!&ndash; To add exclusions in a Jenkins plugin, use:-->
+    <!--<plugin>-->
+    <!--<artifactId>maven-enforcer-plugin</artifactId>-->
+    <!--<executions>-->
+    <!--<execution>-->
+    <!--<id>display-info</id>-->
+    <!--<configuration>-->
+    <!--<rules>-->
+    <!--<enforceBytecodeVersion>-->
+    <!--<excludes combine.children="append">-->
+    <!--<exclude>…</exclude>-->
+    <!--</excludes>-->
+    <!--</enforceBytecodeVersion>-->
+    <!--</rules>-->
+    <!--</configuration>-->
+    <!--</execution>-->
+    <!--</executions>-->
+    <!--</plugin>-->
+    <!--(or just override java.level) &ndash;&gt;-->
+    <!--</enforceBytecodeVersion>-->
+    <!--<bannedDependencies>-->
+    <!--<excludes>-->
+    <!--<exclude>javax.servlet:servlet-api</exclude>-->
+    <!--<exclude>org.sonatype.sisu:sisu-guice</exclude>-->
+    <!--<exclude>log4j:log4j:*:jar:compile</exclude>-->
+    <!--<exclude>log4j:log4j:*:jar:runtime</exclude>-->
+    <!--<exclude>commons-logging:commons-logging:*:jar:compile</exclude>-->
+    <!--<exclude>commons-logging:commons-logging:*:jar:runtime</exclude>-->
+    <!--</excludes>-->
+    <!--</bannedDependencies>-->
+    <!--<requireUpperBoundDeps>-->
+    <!--<excludes>-->
+    <!--<exclude>com.google.guava:guava</exclude> &lt;!&ndash; TODO needed for Jenkins 2.71 and earlier &ndash;&gt;-->
+    <!--<exclude>commons-logging:commons-logging</exclude> &lt;!&ndash; ditto &ndash;&gt;-->
+    <!--<exclude>com.google.code.findbugs:jsr305</exclude> &lt;!&ndash; ditto &ndash;&gt;-->
+    <!--<exclude>net.java.dev.jna:jna</exclude> &lt;!&ndash; needed for Jenkins 1.585 and earlier &ndash;&gt;-->
+    <!--</excludes>-->
+    <!--</requireUpperBoundDeps>-->
+    <!--</rules>-->
+    <!--</configuration>-->
+    <!--</execution>-->
+    <!--</executions>-->
+    <!--<dependencies>-->
+    <!--<dependency>-->
+    <!--<groupId>org.codehaus.mojo</groupId>-->
+    <!--<artifactId>extra-enforcer-rules</artifactId>-->
+    <!--<version>1.0-beta-4</version>-->
+    <!--</dependency>-->
+    <!--</dependencies>-->
+    <!--</plugin>-->
+    <!--</plugins>-->
+    <!--</build>-->
+</project>
