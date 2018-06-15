@@ -1,3 +1,6 @@
+## [0.2.0](https://github.com/Indellient/habitat-jenkins/tree/v0.2.0) (06-15-2018)
+ - License
+
 ## [0.1.5](https://github.com/Indellient/habitat-jenkins/tree/v0.1.5) (06-15-2018)
  - push branch
 
