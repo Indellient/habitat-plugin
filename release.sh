@@ -26,6 +26,12 @@ fi
 git tag -a -m "Tagging version $VERSION_STRING" "v$VERSION_STRING"
 git push origin --tags
 
+BRANCH_NAME="$(git symbolic-ref HEAD 2>/dev/null)" ||
+BRANCH_NAME="(unnamed branch)"     # detached HEAD
+
+BRANCH_NAME=${branch_name##refs/heads/}
+git push origin ${BRANCH_NAME}
+
 # REPO="habitat-jenkins"
 # OWNER="Indellient"
 # ARTIFACT="./target/com.indellient.habitat.hpi"
