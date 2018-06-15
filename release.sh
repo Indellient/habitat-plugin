@@ -1,5 +1,6 @@
 #!/bin/bash
 
+CURRENT=$(cat VERSION)
 VERSION_STRING=$1
 if [ "$VERSION_STRING" = "" ]; then
   echo "Must pass a version"
@@ -9,7 +10,7 @@ echo "Setting v$VERSION_STRING"
 echo $VERSION_STRING > VERSION
 
 echo "## [$VERSION_STRING](https://github.com/Indellient/habitat-jenkins/tree/v$VERSION_STRING) ($(date +%m-%d-%Y))" > tmpfile
-git log --pretty=format:" - %s" "v$(cat VERSION)"...HEAD >> tmpfile
+git log --pretty=format:" - %s" "v${CURRENT}"...HEAD >> tmpfile
 echo "" >> tmpfile
 echo "" >> tmpfile
 cat CHANGELOG.md >> tmpfile
