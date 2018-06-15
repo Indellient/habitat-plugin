@@ -8,7 +8,7 @@ fi
 echo "Setting v$VERSION_STRING"
 echo $VERSION_STRING > VERSION
 
-echo "Version $VERSION_STRING:" > tmpfile
+echo "## [$VERSION_STRING](https://github.com/Indellient/habitat-jenkins/tree/v$VERSION_STRING) $(date +%m-%d-%Y)" > tmpfile
 git log --pretty=format:" - %s" "v$VERSION_STRING"...HEAD >> tmpfile
 echo "" >> tmpfile
 echo "" >> tmpfile
