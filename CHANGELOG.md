@@ -1,3 +1,6 @@
+## [0.1.4](https://github.com/Indellient/habitat-jenkins/tree/v0.1.4) (06-15-2018)
+ - use current version for changelog gen
+
 ## [0.1.3](https://github.com/Indellient/habitat-jenkins/tree/v0.1.3) (06-15-2018)
 
 
