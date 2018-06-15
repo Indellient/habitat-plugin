@@ -8,8 +8,8 @@ fi
 echo "Setting v$VERSION_STRING"
 echo $VERSION_STRING > VERSION
 
-echo "## [$VERSION_STRING](https://github.com/Indellient/habitat-jenkins/tree/v$VERSION_STRING) $(date +%m-%d-%Y)" > tmpfile
-git log --pretty=format:" - %s" "v$VERSION_STRING"...HEAD >> tmpfile
+echo "## [$VERSION_STRING](https://github.com/Indellient/habitat-jenkins/tree/v$VERSION_STRING) ($(date +%m-%d-%Y))" > tmpfile
+git log --pretty=format:" - %s" "v$(cat VERSION)"...HEAD >> tmpfile
 echo "" >> tmpfile
 echo "" >> tmpfile
 cat CHANGELOG.md >> tmpfile
@@ -25,9 +25,7 @@ fi
 git tag -a -m "Tagging version $VERSION_STRING" "v$VERSION_STRING"
 git push origin --tags
 
-sleep 5
-
-REPO="habitat-jenkins"
-OWNER="Indellient"
-ARTIFACT="./target/com.indellient.habitat.hpi"
-./release-asset.sh github_api_token=${GH_API_TOKEN} owner=${OWNER} repo=${REPO} tag=v${VERSION_STRING} filename=${ARTIFACT}
+# REPO="habitat-jenkins"
+# OWNER="Indellient"
+# ARTIFACT="./target/com.indellient.habitat.hpi"
+# ./release-asset.sh github_api_token=${GH_API_TOKEN} owner=${OWNER} repo=${REPO} tag=v${VERSION_STRING} filename=${ARTIFACT}
