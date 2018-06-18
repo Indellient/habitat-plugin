@@ -29,7 +29,7 @@ pipeline {
         }
         stage('build') {
             steps {
-                habitat task: 'build', directory: "${workspace}/."
+                habitat task: 'build', directory: "."
             }
         }
         stage('upload') {
@@ -49,3 +49,5 @@ pipeline {
     }
 }
 ```
+
+The directory for the `build` task must be local to the repository as the studio is created under the root of the repository.
