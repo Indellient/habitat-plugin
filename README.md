@@ -33,19 +33,15 @@ pipeline {
             }
         }
         stage('upload') {
-            withCredentials([
-                [$class: 'StringBinding', credentialsId: 'depot-token', variable: 'HAB_AUTH_TOKEN']
-              ]) {
-              steps {
+            steps {
+              withCredentials([string(credentialsId: 'depot-token', variable: 'HAB_AUTH_TOKEN')]) {
                   habitat task: 'upload', directory: "${workspace}"
               }
             }
         }
         stage('promote') {
-            withCredentials([
-                [$class: 'StringBinding', credentialsId: 'depot-token', variable: 'HAB_AUTH_TOKEN']
-              ]) {
-                steps {
+          steps {
+            withCredentials([string(credentialsId: 'depot-token', variable: 'HAB_AUTH_TOKEN')]) {
                     habitat task: 'promote', channel: 'stable', directory: "${workspace}"
                 }
             }
