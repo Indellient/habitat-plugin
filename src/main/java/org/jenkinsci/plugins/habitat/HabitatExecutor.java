@@ -27,11 +27,59 @@ public class HabitatExecutor extends Builder implements SimpleBuildStep {
     private String task;
     private String channel;
     private String directory;
+    private String artifact;
+    private String origin;
+    private String bldrUrl;
+    private String authToken;
 
     @DataBoundConstructor
-    public HabitatExecutor(String task, String directory) {
-        this.task = task;
-        this.directory = directory;
+    public HabitatExecutor(
+            String task, String directory, String artifact, String channel,
+            String origin, String bldrUrl, String authToken
+    ) {
+        this.setTask(task);
+        this.setArtifact(artifact);
+        this.setDirectory(directory);
+        this.setChannel(channel);
+        this.setOrigin(origin);
+        this.setBldrUrl(bldrUrl);
+        this.setAuthToken(authToken);
+    }
+
+    public String getOrigin() {
+        return origin;
+    }
+
+    @DataBoundSetter
+    public void setOrigin(String origin) {
+        this.origin = origin;
+    }
+
+    public String getBldrUrl() {
+        return bldrUrl;
+    }
+
+    @DataBoundSetter
+    public void setBldrUrl(String bldrUrl) {
+        this.bldrUrl = bldrUrl;
+    }
+
+    public String getAuthToken() {
+        return authToken;
+    }
+
+    @DataBoundSetter
+    public void setAuthToken(String authToken) {
+        this.authToken = authToken;
+    }
+
+    public String getArtifact() {
+        return artifact;
+    }
+
+    @DataBoundSetter
+    public void setArtifact(String artifact) {
+        this.artifact = artifact;
     }
 
     public String getChannel() {
@@ -66,7 +114,7 @@ public class HabitatExecutor extends Builder implements SimpleBuildStep {
         boolean isWindows = System.getProperty("os.name")
                 .toLowerCase().startsWith("windows");
 
-        switch (this.task.trim()) {
+        switch (this.getTask().trim()) {
             case "build":
                 return this.buildCommand(isWindows);
             case "promote":
@@ -86,9 +134,16 @@ public class HabitatExecutor extends Builder implements SimpleBuildStep {
         }
     }
 
-    private String promoteCommand(boolean isWindows, PrintStream log) {
-        String pkgIdent = this.getLastBuild(this.lastBuildPath(), log).getIdent();
+    private String promoteCommand(boolean isWindows, PrintStream log) throws Exception {
+        String pkgIdent = this.getArtifact();
+        if (pkgIdent == null) {
+            pkgIdent = this.getLastBuild(this.lastBuildPath(), log).getIdent();
+        }
+
         String channel = this.getChannel();
+        if (channel == null) {
+            throw new Exception("Channel cannot be null");
+        }
 
         if (isWindows) {
             return String.format("hab pkg promote %s %s", pkgIdent, channel);
@@ -111,12 +166,12 @@ public class HabitatExecutor extends Builder implements SimpleBuildStep {
     }
 
     private String lastBuildPath() {
-        return this.findFile(new File(this.directory).getAbsolutePath(), "last_build.env");
+        return this.findFile(new File(this.getDirectory()).getAbsolutePath(), "last_build.env");
     }
 
     private String getLatestPackage(PrintStream log) {
         String artifact = this.getLastBuild(this.lastBuildPath(), log).getArtifact();
-        return this.findFile(new File(this.directory).getAbsolutePath(), artifact);
+        return this.findFile(new File(this.getDirectory()).getAbsolutePath(), artifact);
     }
 
     private LastBuild getLastBuild(String path, PrintStream log) {
@@ -140,23 +195,58 @@ public class HabitatExecutor extends Builder implements SimpleBuildStep {
         return result;
     }
 
+    private Map<String, String> getEnv(PrintStream log) throws Exception {
+        Map<String, String> env = new HashMap<>();
+        env.put("HAB_NOCOLORING", "true");
+
+        if (this.getOrigin() == null) {
+            if (this.getTask().equalsIgnoreCase("build")){
+                throw new Exception("cannot build without specifying an origin");
+            }
+        } else {
+            env.put("HAB_ORIGIN", this.getOrigin());
+        }
+
+        if (this.getAuthToken() == null) {
+            if (this.needsAuthToken()) {
+                throw new Exception("this task needs an auth token to be set");
+            }
+        } else {
+            env.put("HAB_AUTH_TOKEN", this.getAuthToken());
+        }
+
+        if (this.getBldrUrl() != null) {
+            env.put("HAB_BLDR_URL", this.getBldrUrl());
+        }
+
+        return env;
+    }
+
+    private boolean needsAuthToken(){
+        return this.getTask().equalsIgnoreCase("upload") || this.getTask().equalsIgnoreCase("promote");
+    }
+
     @Override
     public void perform(@Nonnull Run<?, ?> build, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
         PrintStream log = listener.getLogger();
+        Map<String, String> otherEnvs = build.getEnvironment(TaskListener.NULL);
 
-        Map<String, String> buildEnv = build.getEnvVars();
-        Map<String, String> env = new HashMap<>();
-        env.put("HAB_NOCOLORING", "true");
-        env.putAll(buildEnv);
         Proc proc = null;
         try {
-            proc = launcher.launch(this.command(log), env, listener.getLogger(), workspace);
+            Map<String, String> env = this.getEnv(log);
+            env.putAll(otherEnvs);
+
+            log.println("Build Environment Variables");
+            env.forEach((k,v) -> log.println(k + ": " + v));
+            Launcher.ProcStarter starter = launcher.launch().pwd(workspace).envs(env).cmdAsSingleString(this.command(log));
+            starter.stdout(log);
+            proc = launcher.launch(starter);
         } catch (Exception e) {
             log.println(e.getMessage());
         }
         int exitCode = proc.join();
         if (exitCode != 0) {
-            throw new IOException("Failed to execute " + this.task);
+            throw new IOException("Failed to execute " + this.getTask());
         }
 
     }
