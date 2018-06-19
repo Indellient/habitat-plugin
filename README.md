@@ -29,23 +29,19 @@ pipeline {
         }
         stage('build') {
             steps {
-                habitat task: 'build', directory: "${workspace}/."
+                habitat task: 'build', directory: "."
             }
         }
         stage('upload') {
-            withCredentials([
-                [$class: 'StringBinding', credentialsId: 'depot-token', variable: 'HAB_AUTH_TOKEN']
-              ]) {
-              steps {
+            steps {
+              withCredentials([string(credentialsId: 'depot-token', variable: 'HAB_AUTH_TOKEN')]) {
                   habitat task: 'upload', directory: "${workspace}"
               }
             }
         }
         stage('promote') {
-            withCredentials([
-                [$class: 'StringBinding', credentialsId: 'depot-token', variable: 'HAB_AUTH_TOKEN']
-              ]) {
-                steps {
+          steps {
+            withCredentials([string(credentialsId: 'depot-token', variable: 'HAB_AUTH_TOKEN')]) {
                     habitat task: 'promote', channel: 'stable', directory: "${workspace}"
                 }
             }
@@ -53,3 +49,5 @@ pipeline {
     }
 }
 ```
+
+The directory for the `build` task must be local to the repository as the studio is created under the root of the repository.
