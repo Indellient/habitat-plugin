@@ -170,7 +170,9 @@ public class HabitatExecutor extends Builder implements SimpleBuildStep {
     }
 
     private String getLatestPackage(PrintStream log) {
+        log.println("Looking for last_build.env in " + new File(this.getDirectory()).getAbsolutePath());
         String artifact = this.getLastBuild(this.lastBuildPath(), log).getArtifact();
+        log.println("Artifact " + artifact + " found in: " + new File(this.getDirectory()).getAbsolutePath();
         return this.findFile(new File(this.getDirectory()).getAbsolutePath(), artifact);
     }
 
