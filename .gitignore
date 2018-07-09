@@ -55,3 +55,4 @@ fabric.properties
 results/
 target/
 work/
+.DS_Store

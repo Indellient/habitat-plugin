@@ -1,14 +1,8 @@
 package org.jenkinsci.plugins.habitat;
 
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.io.*;
 
-public class LastBuild {
+public class LastBuild implements Serializable {
 
     private String origin;
     private String name;
@@ -19,39 +13,9 @@ public class LastBuild {
     private String sha256sum;
     private String blake2bsum;
 
-    private PrintStream log;
-    public LastBuild(String file, PrintStream log) {
-        this.log = log;
-        this.parseFile(file);
+    public LastBuild() {
     }
 
-    private void parseFile(String file) {
-        this.setArtifact(this.getLastBuildField(file, "pkg_artifact"));
-        this.setOrigin(this.getLastBuildField(file, "pkg_origin"));
-        this.setName(this.getLastBuildField(file, "pkg_name"));
-        this.setVersion(this.getLastBuildField(file, "pkg_version"));
-        this.setRelease(this.getLastBuildField(file, "pkg_release"));
-        this.setIdent(this.getLastBuildField(file, "pkg_ident"));
-        this.setArtifact(this.getLastBuildField(file, "pkg_artifact"));
-        this.setSha256sum(this.getLastBuildField(file, "pkg_sha256sum"));
-        this.setBlake2bsum(this.getLastBuildField(file, "pkg_blake2bsum"));
-    }
-
-    private String getLastBuildField(String file, String tag) {
-        List<String> lines = null;
-        try {
-            lines = Files.lines(Paths.get(file)).collect(Collectors.toList());
-
-        } catch (IOException e) {
-            log.println(e.getMessage());
-        }
-        for (String line : lines) {
-            if (line.contains(tag)) {
-                return Arrays.asList(line.split("=")).get(1);
-            }
-        }
-        return null;
-    }
 
     public String getOrigin() {
         return origin;
@@ -128,7 +92,6 @@ public class LastBuild {
                 ", artifact='" + artifact + '\'' +
                 ", sha256sum='" + sha256sum + '\'' +
                 ", blake2bsum='" + blake2bsum + '\'' +
-                ", log=" + log +
                 '}';
     }
 }

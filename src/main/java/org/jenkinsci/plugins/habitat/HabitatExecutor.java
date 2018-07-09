@@ -5,6 +5,7 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Proc;
 import hudson.model.*;
+import hudson.remoting.VirtualChannel;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import jenkins.tasks.SimpleBuildStep;
@@ -17,25 +18,26 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 public class HabitatExecutor extends Builder implements SimpleBuildStep {
 
     private String task;
     private String channel;
     private String directory;
+    private String lastBuildFile;
     private String artifact;
     private String origin;
     private String bldrUrl;
     private String authToken;
 
+    private VirtualChannel slave;
+
+
     @DataBoundConstructor
     public HabitatExecutor(
             String task, String directory, String artifact, String channel,
-            String origin, String bldrUrl, String authToken
+            String origin, String bldrUrl, String authToken, String lastBuildFile
     ) {
         this.setTask(task);
         this.setArtifact(artifact);
@@ -44,6 +46,16 @@ public class HabitatExecutor extends Builder implements SimpleBuildStep {
         this.setOrigin(origin);
         this.setBldrUrl(bldrUrl);
         this.setAuthToken(authToken);
+        this.setLastBuildFile(lastBuildFile);
+    }
+
+    public String getLastBuildFile() {
+        return lastBuildFile;
+    }
+
+    @DataBoundSetter
+    public void setLastBuildFile(String lastBuildFile) {
+        this.lastBuildFile = lastBuildFile;
     }
 
     public String getOrigin() {
@@ -137,7 +149,8 @@ public class HabitatExecutor extends Builder implements SimpleBuildStep {
     private String promoteCommand(boolean isWindows, PrintStream log) throws Exception {
         String pkgIdent = this.getArtifact();
         if (pkgIdent == null) {
-            pkgIdent = this.getLastBuild(this.lastBuildPath(), log).getIdent();
+            LastBuild lastBuild = this.slave.call(new LastBuildSlaveRetriever(this.lastBuildPath(log)));
+            pkgIdent = lastBuild.getIdent();
         }
 
         String channel = this.getChannel();
@@ -155,7 +168,7 @@ public class HabitatExecutor extends Builder implements SimpleBuildStep {
     private String uploadCommand(boolean isWindows, PrintStream log) throws Exception {
         String lastPackage = this.getLatestPackage(log);
         log.println("Last Package: " + lastPackage);
-        if (!(new File(lastPackage).exists())) {
+        if (!this.slave.call(new FileExistence(lastPackage))) {
             throw new Exception("Could not find hart " + lastPackage);
         }
         if (isWindows) {
@@ -165,44 +178,35 @@ public class HabitatExecutor extends Builder implements SimpleBuildStep {
         }
     }
 
-    private String lastBuildPath() {
-        return this.findFile(new File(this.getDirectory()).getAbsolutePath(), "last_build.env");
+    private String getLatestPackage(PrintStream log) throws Exception {
+        LastBuild lastBuild = this.slave.call(new LastBuildSlaveRetriever(this.lastBuildPath(log)));
+        String artifact = lastBuild.getArtifact();
+        log.println("Artifact " + artifact + " found in: " + new File(this.getDirectory()).getAbsolutePath());
+        return new File(this.getDirectory()).getAbsolutePath() + File.separator + artifact;
+//        return this.slave.call(new FileFinder(new File(this.getDirectory()).getAbsolutePath(), artifact));
     }
 
-    private String getLatestPackage(PrintStream log) {
-        log.println("Looking for last_build.env in " + new File(this.getDirectory()).getAbsolutePath());
-        String artifact = this.getLastBuild(this.lastBuildPath(), log).getArtifact();
-        log.println("Artifact " + artifact + " found in: " + new File(this.getDirectory()).getAbsolutePath();
-        return this.findFile(new File(this.getDirectory()).getAbsolutePath(), artifact);
-    }
-
-    private LastBuild getLastBuild(String path, PrintStream log) {
-        LastBuild last = new LastBuild(path, log);
-        log.println(last.toString());
-        return last;
-    }
-
-    private String findFile(String startPath, String file) {
-
-        Collection files = FileUtils.listFiles(new File(startPath), null, true);
-
-        String result = "";
-        for (Iterator iterator = files.iterator(); iterator.hasNext(); ) {
-            File f = (File) iterator.next();
-            if (f.getName().equals(file)) {
-                result = f.getAbsolutePath();
+    private String lastBuildPath(PrintStream log) throws Exception {
+        if (this.getLastBuildFile() != null) {
+            if (this.getDirectory() == null) {
+                String dir = this.getLastBuildFile();
+                dir = dir.replace("last_build.env", "");
+                log.println("Setting Directory: " + dir);
+                this.setDirectory(dir);
             }
-
+            return this.getLastBuildFile();
+        } else {
+            return this.slave.call(new FileFinder(new File(this.getDirectory()).getAbsolutePath(), "last_build.env"));
         }
-        return result;
     }
+
 
     private Map<String, String> getEnv(PrintStream log) throws Exception {
         Map<String, String> env = new HashMap<>();
         env.put("HAB_NOCOLORING", "true");
 
         if (this.getOrigin() == null) {
-            if (this.getTask().equalsIgnoreCase("build")){
+            if (this.getTask().equalsIgnoreCase("build")) {
                 throw new Exception("cannot build without specifying an origin");
             }
         } else {
@@ -224,7 +228,7 @@ public class HabitatExecutor extends Builder implements SimpleBuildStep {
         return env;
     }
 
-    private boolean needsAuthToken(){
+    private boolean needsAuthToken() {
         return this.getTask().equalsIgnoreCase("upload") || this.getTask().equalsIgnoreCase("promote");
     }
 
@@ -239,7 +243,8 @@ public class HabitatExecutor extends Builder implements SimpleBuildStep {
             env.putAll(otherEnvs);
 
             log.println("Build Environment Variables");
-            env.forEach((k,v) -> log.println(k + ": " + v));
+            env.forEach((k, v) -> log.println(k + ": " + v));
+            this.slave = launcher.getChannel();
             Launcher.ProcStarter starter = launcher.launch().pwd(workspace).envs(env).cmdAsSingleString(this.command(log));
             starter.stdout(log);
             proc = launcher.launch(starter);
