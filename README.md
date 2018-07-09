@@ -1,3 +1,7 @@
+# DEPRECATED: SEE https://github.com/jenkinsci/habitat-plugin
+
+
+
 # Jenkins Habitat Executor Plugin
 
 This plugin allows for the abstraction of building, uploading, and promoting
