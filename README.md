@@ -45,7 +45,7 @@ pipeline {
 }
 ```
 
-### Example Promotion/Release Jon
+### Example Promotion/Release Job
 
 ```
 pipeline {
